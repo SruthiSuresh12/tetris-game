@@ -16,10 +16,7 @@ const hardDropBtn = document.getElementById('hardDropBtn');
 
 const ROWS = 20;
 const COLS = 10;
-const BLOCK_SIZE = 30;
-
-canvas.width = COLS * BLOCK_SIZE;
-canvas.height = ROWS * BLOCK_SIZE;
+let BLOCK_SIZE;
 
 let board = [];
 let score = 0;
@@ -54,6 +51,39 @@ const PIECES = [
 
 let piece = null;
 let nextPiece = getRandomPiece();
+
+// This function now calculates BLOCK_SIZE and sets the canvas dimensions.
+function setCanvasDimensions() {
+    const mainContainer = document.getElementById('game-container');
+    const containerWidth = mainContainer.clientWidth;
+    const containerHeight = mainContainer.clientHeight;
+    
+    // We want the canvas to be the main element that sizes the game.
+    // Calculate the block size based on the available width
+    BLOCK_SIZE = Math.floor(containerWidth / COLS);
+    
+    // Set the canvas dimensions to a pixel value for a sharp render
+    canvas.width = COLS * BLOCK_SIZE;
+    canvas.height = ROWS * BLOCK_SIZE;
+
+    // To ensure everything fits, let's also adjust the width of the other UI elements
+    const topInfo = document.getElementById('top-info');
+    const scoreDisplayContainer = document.getElementById('score-display');
+    const controlsContainer = document.getElementById('controls');
+
+    topInfo.style.width = `${canvas.width}px`;
+    scoreDisplayContainer.style.width = `${canvas.width}px`;
+    controlsContainer.style.width = `${canvas.width}px`;
+
+    // Adjust the hold and next canvas sizes
+    holdCanvas.width = 4 * BLOCK_SIZE;
+    holdCanvas.height = 4 * BLOCK_SIZE;
+    nextCanvas.width = 4 * BLOCK_SIZE;
+    nextCanvas.height = 4 * BLOCK_SIZE;
+}
+
+// Call this on initial load and window resize
+window.addEventListener('resize', setCanvasDimensions);
 
 function initBoard() {
     for (let r = 0; r < ROWS; r++) {
@@ -110,21 +140,19 @@ function drawPiece() {
 }
 
 function drawNextAndHold() {
-    const pieceSize = 30;
-
     // Draw Next Piece
     nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
     const nextPieceShape = nextPiece.shape;
     const nextPieceColor = nextPiece.color;
-    const nextOffsetX = (nextCanvas.width - nextPieceShape[0].length * pieceSize) / 2;
-    const nextOffsetY = (nextCanvas.height - nextPieceShape.length * pieceSize) / 2;
+    const nextOffsetX = (nextCanvas.width - nextPieceShape[0].length * BLOCK_SIZE) / 2;
+    const nextOffsetY = (nextCanvas.height - nextPieceShape.length * BLOCK_SIZE) / 2;
     for (let r = 0; r < nextPieceShape.length; r++) {
         for (let c = 0; c < nextPieceShape[r].length; c++) {
             if (nextPieceShape[r][c]) {
                 nextCtx.fillStyle = nextPieceColor;
-                nextCtx.fillRect(nextOffsetX + c * pieceSize, nextOffsetY + r * pieceSize, pieceSize, pieceSize);
+                nextCtx.fillRect(nextOffsetX + c * BLOCK_SIZE, nextOffsetY + r * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                 nextCtx.strokeStyle = '#fff';
-                nextCtx.strokeRect(nextOffsetX + c * pieceSize, nextOffsetY + r * pieceSize, pieceSize, pieceSize);
+                nextCtx.strokeRect(nextOffsetX + c * BLOCK_SIZE, nextOffsetY + r * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
             }
         }
     }
@@ -134,15 +162,15 @@ function drawNextAndHold() {
     if (holdPiece) {
         const holdPieceShape = holdPiece.shape;
         const holdPieceColor = holdPiece.color;
-        const holdOffsetX = (holdCanvas.width - holdPieceShape[0].length * pieceSize) / 2;
-        const holdOffsetY = (holdCanvas.height - holdPieceShape.length * pieceSize) / 2;
+        const holdOffsetX = (holdCanvas.width - holdPieceShape[0].length * BLOCK_SIZE) / 2;
+        const holdOffsetY = (holdCanvas.height - holdPieceShape.length * BLOCK_SIZE) / 2;
         for (let r = 0; r < holdPieceShape.length; r++) {
             for (let c = 0; c < holdPieceShape[r].length; c++) {
                 if (holdPieceShape[r][c]) {
                     holdCtx.fillStyle = holdPieceColor;
-                    holdCtx.fillRect(holdOffsetX + c * pieceSize, holdOffsetY + r * pieceSize, pieceSize, pieceSize);
+                    holdCtx.fillRect(holdOffsetX + c * BLOCK_SIZE, holdOffsetY + r * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                     holdCtx.strokeStyle = '#fff';
-                    holdCtx.strokeRect(holdOffsetX + c * pieceSize, holdOffsetY + r * pieceSize, pieceSize, pieceSize);
+                    holdCtx.strokeRect(holdOffsetX + c * BLOCK_SIZE, holdOffsetY + r * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                 }
             }
         }
@@ -262,7 +290,7 @@ function rotatePiece(direction) {
                 rotatedShape[c].push(piece.shape[r][c]);
             }
         }
-    } else { // Rotate left
+    } else {
         for (let c = piece.shape[0].length - 1; c >= 0; c--) {
             rotatedShape[c] = [];
             for (let r = 0; r < piece.shape.length; r++) {
@@ -296,7 +324,7 @@ document.addEventListener('keydown', e => {
         case 'ArrowUp':
             rotatePiece('right');
             break;
-        case 'z': // rotate left with 'z' key
+        case 'z':
             rotatePiece('left');
             break;
         case ' ':
@@ -314,8 +342,6 @@ let touchendX = 0;
 let touchstartY = 0;
 let touchendY = 0;
 
-const gameCanvas = document.getElementById('gameCanvas');
-
 gameCanvas.addEventListener('touchstart', e => {
     e.preventDefault();
     touchstartX = e.changedTouches[0].screenX;
@@ -326,7 +352,7 @@ gameCanvas.addEventListener('touchmove', e => {
     e.preventDefault();
     const currentX = e.changedTouches[0].screenX;
     const deltaX = currentX - touchstartX;
-    const threshold = 30;
+    const threshold = BLOCK_SIZE;
 
     if (Math.abs(deltaX) > threshold) {
         if (deltaX > 0) {
@@ -350,11 +376,7 @@ function handleGesture() {
     const deltaY = touchendY - touchstartY;
     const threshold = 15;
 
-    if (deltaY > threshold) {
-        // Swipe down for rotate left
-        rotatePiece('left');
-    } else if (deltaY < -threshold) {
-        // Swipe up for rotate right
+    if (deltaY < -threshold) {
         rotatePiece('right');
     }
 }
@@ -396,6 +418,7 @@ function gameLoop(time) {
 }
 
 function startGame() {
+    setCanvasDimensions(); // Initial sizing
     initBoard();
     score = 0;
     level = 1;
@@ -423,3 +446,4 @@ function endGame() {
 restartBtn.addEventListener('click', startGame);
 
 startGame();
+
