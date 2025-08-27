@@ -308,6 +308,3 @@ restartBtn.addEventListener('click', startGame);
 
 // Initialize the game for the first time
 startGame();
-
-
-So like this?
