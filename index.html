@@ -10,7 +10,23 @@
 
     <div id="game-container">
         <h1>Tetris</h1>
-        <canvas id="gameCanvas"></canvas>
+        <div id="game-info">
+            <div id="hold-container">
+                <h3>Hold</h3>
+                <canvas id="holdCanvas" width="120" height="120"></canvas>
+            </div>
+            <div id="game-board-and-buttons">
+                <canvas id="gameCanvas"></canvas>
+                <div id="controls">
+                    <button id="softDropBtn">Soft Drop</button>
+                    <button id="hardDropBtn">Hard Drop</button>
+                </div>
+            </div>
+            <div id="next-container">
+                <h3>Next</h3>
+                <canvas id="nextCanvas" width="120" height="120"></canvas>
+            </div>
+        </div>
         <div id="score-display">
             <span>Score: <span id="score">0</span></span>
             <span>Level: <span id="level">1</span></span>
