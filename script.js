@@ -10,6 +10,10 @@ const ROWS = 20;
 const COLS = 10;
 const BLOCK_SIZE = 30;
 
+// Set the canvas dimensions based on the grid size
+canvas.width = COLS * BLOCK_SIZE;
+canvas.height = ROWS * BLOCK_SIZE;
+
 let board = [];
 let score = 0;
 let level = 1;
@@ -194,6 +198,7 @@ function rotatePiece() {
     }
 }
 
+// Keyboard controls
 document.addEventListener('keydown', e => {
     if (gameOver) return;
     switch (e.key) {
@@ -213,14 +218,13 @@ document.addEventListener('keydown', e => {
             break;
     }
 });
-// --- Add this code to your script.js file to enable touch controls ---
 
+// Touch controls
 let touchstartX = 0;
 let touchendX = 0;
 let touchstartY = 0;
 let touchendY = 0;
 
-// Get the element to listen for touch events on (the canvas)
 const gameCanvas = document.getElementById('gameCanvas');
 
 gameCanvas.addEventListener('touchstart', e => {
@@ -237,33 +241,24 @@ gameCanvas.addEventListener('touchend', e => {
 function handleGesture() {
     const deltaX = touchendX - touchstartX;
     const deltaY = touchendY - touchstartY;
-
-    // A small threshold to prevent accidental movement
     const threshold = 15;
 
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
-        // Horizontal swipe
         if (deltaX > 0) {
-            // Swipe right
             piece.x++;
             if (collide()) piece.x--;
         } else {
-            // Swipe left
             piece.x--;
             if (collide()) piece.x++;
         }
     } else if (Math.abs(deltaY) > threshold) {
-        // Vertical swipe or tap
         if (deltaY > 0) {
-            // Swipe down (soft drop)
             drop();
         } else {
-            // Swipe up (rotation)
             rotatePiece();
         }
     }
 }
-
 
 function gameLoop(time) {
     if (gameOver) return;
