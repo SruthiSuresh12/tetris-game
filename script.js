@@ -6,11 +6,11 @@ const gameOverScreen = document.getElementById('gameOverScreen');
 const finalScoreDisplay = document.getElementById('finalScore');
 const restartBtn = document.getElementById('restartBtn');
 
-// New canvas and button elements for additional features
 const holdCanvas = document.getElementById('holdCanvas');
 const holdCtx = holdCanvas.getContext('2d');
 const nextCanvas = document.getElementById('nextCanvas');
 const nextCtx = nextCanvas.getContext('2d');
+const holdBtn = document.getElementById('holdBtn');
 const softDropBtn = document.getElementById('softDropBtn');
 const hardDropBtn = document.getElementById('hardDropBtn');
 
@@ -18,7 +18,6 @@ const ROWS = 20;
 const COLS = 10;
 const BLOCK_SIZE = 30;
 
-// Set the canvas dimensions based on the grid size
 canvas.width = COLS * BLOCK_SIZE;
 canvas.height = ROWS * BLOCK_SIZE;
 
@@ -30,11 +29,9 @@ let dropInterval = 1000;
 let lastTime = 0;
 let gameOver = false;
 
-// New game state variables
 let holdPiece = null;
 let canSwap = true;
 
-// Updated color rules (Pastel versions)
 const COLORS = [
     '#90d6e6', // Cyan I
     '#f7e8a3', // Yellow O
@@ -46,19 +43,12 @@ const COLORS = [
 ];
 
 const PIECES = [
-    // I piece
     [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-    // O piece
     [[1, 1], [1, 1]],
-    // T piece
     [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
-    // S piece
     [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
-    // Z piece
     [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
-    // J piece
     [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
-    // L piece
     [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
 ];
 
@@ -193,7 +183,7 @@ function lockPiece() {
     clearLines();
     piece = nextPiece;
     nextPiece = getRandomPiece();
-    canSwap = true; // Allow swapping again after a piece is locked
+    canSwap = true;
 
     if (collide()) {
         endGame();
@@ -263,14 +253,24 @@ function holdCurrentPiece() {
     }
 }
 
-function rotatePiece() {
+function rotatePiece(direction) {
     let rotatedShape = [];
-    for (let c = 0; c < piece.shape[0].length; c++) {
-        rotatedShape[c] = [];
-        for (let r = piece.shape.length - 1; r >= 0; r--) {
-            rotatedShape[c].push(piece.shape[r][c]);
+    if (direction === 'right') {
+        for (let c = 0; c < piece.shape[0].length; c++) {
+            rotatedShape[c] = [];
+            for (let r = piece.shape.length - 1; r >= 0; r--) {
+                rotatedShape[c].push(piece.shape[r][c]);
+            }
+        }
+    } else { // Rotate left
+        for (let c = piece.shape[0].length - 1; c >= 0; c--) {
+            rotatedShape[c] = [];
+            for (let r = 0; r < piece.shape.length; r++) {
+                rotatedShape[c].unshift(piece.shape[r][c]);
+            }
         }
     }
+    
     const originalShape = piece.shape;
     piece.shape = rotatedShape;
     if (collide()) {
@@ -294,7 +294,10 @@ document.addEventListener('keydown', e => {
             drop();
             break;
         case 'ArrowUp':
-            rotatePiece();
+            rotatePiece('right');
+            break;
+        case 'z': // rotate left with 'z' key
+            rotatePiece('left');
             break;
         case ' ':
             hardDrop();
@@ -348,13 +351,20 @@ function handleGesture() {
     const threshold = 15;
 
     if (deltaY > threshold) {
-        hardDrop();
+        // Swipe down for rotate left
+        rotatePiece('left');
     } else if (deltaY < -threshold) {
-        rotatePiece();
+        // Swipe up for rotate right
+        rotatePiece('right');
     }
 }
 
 // Button controls
+holdBtn.addEventListener('click', () => {
+    if (gameOver) return;
+    holdCurrentPiece();
+});
+
 softDropBtn.addEventListener('click', () => {
     if (gameOver) return;
     drop();
@@ -395,7 +405,6 @@ function startGame() {
     gameOver = false;
     gameOverScreen.classList.add('hidden');
     
-    // Reset pieces
     piece = getRandomPiece();
     nextPiece = getRandomPiece();
     holdPiece = null;
@@ -413,5 +422,4 @@ function endGame() {
 
 restartBtn.addEventListener('click', startGame);
 
-// Initialize the game for the first time
 startGame();
